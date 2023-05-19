@@ -12,7 +12,7 @@ use windows::Win32::NetworkManagement::IpHelper::{
 use windows::Win32::Networking::WinSock::{SOCKADDR_IN, SOCKADDR_IN6};
 
 use crate::gateway::Gateway;
-use crate::interface::{Interface, InterfaceType, MacAddr};
+use crate::interface::{IfOperStatus, Interface, InterfaceType, MacAddr};
 use crate::ip::{Ipv4Net, Ipv6Net};
 
 #[cfg(target_endian = "little")]
@@ -118,6 +118,9 @@ pub fn interfaces() -> Vec<Interface> {
             let transmit_speed = unsafe { (*cur).TransmitLinkSpeed };
             // ReceiveLinkSpeed (bits per second)
             let receive_speed = unsafe { (*cur).ReceiveLinkSpeed };
+            // OperStatus
+            let oper_status = unsafe { (*cur).OperStatus.0 };
+            let mtu = unsafe { (*cur).Mtu };
             let mut ipv4_vec: Vec<Ipv4Net> = vec![];
             let mut ipv6_vec: Vec<Ipv6Net> = vec![];
             // Enumerate all IPs
@@ -192,6 +195,9 @@ pub fn interfaces() -> Vec<Interface> {
                 transmit_speed: Some(transmit_speed),
                 receive_speed: Some(receive_speed),
                 gateway: default_gateway,
+                if_oper_status: IfOperStatus::try_from(oper_status)
+                    .unwrap_or(IfOperStatus::Unknown),
+                mtu,
             };
             interfaces.push(interface);
             cur = unsafe { (*cur).Next };

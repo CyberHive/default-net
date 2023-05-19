@@ -206,3 +206,65 @@ impl TryFrom<u32> for InterfaceType {
         }
     }
 }
+
+/// IfOperStatus (See RFC2863)
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum IfOperStatus {
+    // The interface is up and able to pass packets.
+    Up,
+    // The interface is down and not in a condition to pass packets.
+    Down,
+    // The interface is in testing mode.
+    Testing,
+    // The operational status of the interface is unknown.
+    Unknown,
+    // The interface is not actually in a condition to pass packets,
+    // but is in a pending state, waiting for some external event.
+    Dormant,
+    // The interface is down because a (hardware) component is not present.
+    NotPresent,
+    // The interface is down because one or more lower-layer interfaces are down.
+    LowerLayerDown,
+}
+
+impl IfOperStatus {
+    /// Returns OS-specific value of IfOperStatus
+    pub fn value(&self) -> i32 {
+        #[cfg(target_os = "windows")]
+        {
+            match *self {
+                IfOperStatus::Up => 1,
+                IfOperStatus::Down => 2,
+                IfOperStatus::Testing => 3,
+                IfOperStatus::Unknown => 4,
+                IfOperStatus::Dormant => 5,
+                IfOperStatus::NotPresent => 6,
+                IfOperStatus::LowerLayerDown => 7,
+            }
+        }
+
+        #[cfg(not(target_os = "windows"))]
+        {
+            // TODO
+            match *self {
+                _ => 0,
+            }
+        }
+    }
+}
+
+impl TryFrom<i32> for IfOperStatus {
+    type Error = ();
+    fn try_from(v: i32) -> Result<Self, Self::Error> {
+        match v {
+            x if x == IfOperStatus::Up.value() => Ok(IfOperStatus::Up),
+            x if x == IfOperStatus::Down.value() => Ok(IfOperStatus::Down),
+            x if x == IfOperStatus::Testing.value() => Ok(IfOperStatus::Testing),
+            x if x == IfOperStatus::Unknown.value() => Ok(IfOperStatus::Unknown),
+            x if x == IfOperStatus::Dormant.value() => Ok(IfOperStatus::Dormant),
+            x if x == IfOperStatus::NotPresent.value() => Ok(IfOperStatus::NotPresent),
+            x if x == IfOperStatus::LowerLayerDown.value() => Ok(IfOperStatus::LowerLayerDown),
+            _ => Err(()),
+        }
+    }
+}
