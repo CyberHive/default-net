@@ -123,6 +123,10 @@ pub struct Interface {
     pub receive_speed: Option<u64>,
     /// Default gateway for the network interface
     pub gateway: Option<Gateway>,
+    /// IfOperStatus as defined by RFC2863
+    pub if_oper_status: IfOperStatus,
+    /// MTU
+    pub mtu: u32,
 }
 
 /// Get default Network Interface
